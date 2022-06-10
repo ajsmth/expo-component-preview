@@ -1,0 +1,16 @@
+{
+  "name": "expo-component-preview-repo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "andy",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "library",
+    "example"
+  ],
+  "scripts": {
+    "start": "cd example && yarn start",
+    "build": "cd library && yarn build"
+  }
+}

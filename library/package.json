@@ -1,0 +1,27 @@
+{
+  "name": "expo-component-preview",
+  "version": "1.0.0",
+  "main": "./build/index.js",
+  "bin": "./cli.js",
+  "files": [
+    "./withExpoComponentPreview.js"
+  ],
+  "types": "./build/index.d.ts",
+  "author": "andy",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.39",
+    "@types/react": "~17.0.21",
+    "@types/react-native": "~0.66.13",
+    "@types/ws": "^8.5.3",
+    "react": "^18.1.0",
+    "react-native": "0.68.2",
+    "typescript": "~4.3.5"
+  },
+  "dependencies": {
+    "yargs": "^17.5.1"
+  }
+}
