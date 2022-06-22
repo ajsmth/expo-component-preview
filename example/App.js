@@ -6,7 +6,7 @@ export default function App() {
   return (
     <ExpoPreviewProvider>
       <View style={styles.container}>
-        <Text>Open up App.tsx to start working on your app!</Text>
+        <Text>Open up App.tsx test est to start working on your app!</Text>
         <StatusBar style="auto" />
       </View>
     </ExpoPreviewProvider>
@@ -20,15 +20,6 @@ export function MyComponent() {
     </View>
   );
 }
-
-export function MyOtherComponent() {
-  return (
-    <View style={{ marginTop: 100 }}>
-      <Text>This is also cool, very cool indeed</Text>
-    </View>
-  );
-}
-
 
 const styles = StyleSheet.create({
   container: {

@@ -5,8 +5,6 @@ var http_1 = require("http");
 var path = require("path");
 var fs = require("fs");
 var ws_1 = require("ws");
-// if changing this, you'll also need to update the `withExpoComponentPreview` value
-var previewComponentFileName = "expo-preview-component.js";
 function start(_a) {
     var port = _a.port, root = _a.root;
     var server = http_1.createServer(function (req, res) {
@@ -23,26 +21,30 @@ function start(_a) {
         }
         res.end();
     });
-    var pathToPreviewComponentFile = path.resolve(root, ".expo", previewComponentFileName);
-    var template = "\nmodule.exports = require('{{ filePath }}').{{ componentName }}\n  ";
+    var pathToPreviewComponentFile = path.resolve(root, ".expo", "expo-component-preview.js");
+    var template = "\nmodule.exports = require('{{ filePath }}')\n  ";
     var emptyTemplate = "\nmodule.exports = null\n  ";
     function updatePreviewComponent(filePath, componentName) {
         if (componentName === void 0) { componentName = "default"; }
         resetPreviewComponent();
-        fs.writeFileSync(pathToPreviewComponentFile, template
-            .replace("{{ filePath }}", filePath)
-            .replace("{{ componentName }}", componentName), { encoding: "utf-8" });
+        var fileContents = template.replace("{{ filePath }}", filePath);
+        fs.writeFileSync(pathToPreviewComponentFile, fileContents, {
+            encoding: "utf-8"
+        });
+        wss.clients.forEach(function (client) {
+            client.send(JSON.stringify({ componentName: componentName }));
+        });
     }
     function resetPreviewComponent() {
         fs.writeFileSync(pathToPreviewComponentFile, emptyTemplate, {
             encoding: "utf-8"
         });
     }
-    resetPreviewComponent();
     server.on("close", function () {
         resetPreviewComponent();
     });
     server.listen(port, function () {
+        resetPreviewComponent();
         console.log("Expo Component Preview running on http://localhost:" + port);
     });
     process.on("exit", function () {

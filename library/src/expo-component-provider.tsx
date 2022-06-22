@@ -1,27 +1,22 @@
 import * as React from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
 
-export function ExpoPreviewProvider({ children, port = 3000 }: any) {
-  let SelectedComponent = null;
+type ExpoPreviewProviderProps = {
+  children?: any;
+};
 
-  const ws = useWebsocket(port);
-
-  try {
-    SelectedComponent = require("expo-preview-internal");
-  } catch (error) {
-    console.log({ error });
-    SelectedComponent = null;
-  }
-
-  function onClose() {
-    ws.send("onClosePress");
-  }
+export function ExpoPreviewProvider({
+  children,
+}: ExpoPreviewProviderProps) {
+  // TODO - make port configurable
+  const { onClose, SelectedComponent } = useComponentPreview();
 
   return (
     <View style={StyleSheet.absoluteFill}>
       {children}
       {Boolean(SelectedComponent) && (
         <View style={[StyleSheet.absoluteFill, { backgroundColor: "white" }]}>
+          <SelectedComponent />
           <View
             style={{
               position: "absolute",
@@ -33,16 +28,18 @@ export function ExpoPreviewProvider({ children, port = 3000 }: any) {
           >
             <Button title="Close" onPress={() => onClose()} />
           </View>
-
-          <SelectedComponent />
         </View>
       )}
     </View>
   );
 }
 
-function useWebsocket(port: number) {
+function useComponentPreview(port: number = 3241) {
   const [ws, setWs] = React.useState(new WebSocket(`ws://localhost:${port}`));
+  const [selectedComponentName, setSelectedComponentName] = React.useState("");
+
+  const SelectedComponent =
+    require("expo-component-preview-internal")?.[selectedComponentName] ?? null;
 
   React.useEffect(() => {
     setWs(new WebSocket(`ws://localhost:${port}`));
@@ -50,21 +47,25 @@ function useWebsocket(port: number) {
 
   React.useEffect(() => {
     function onOpen() {
-      console.log("onOpen()");
+      setSelectedComponentName("");
     }
 
-    function onError(error: any) {
-      console.log("onError()");
-      console.log({ error });
-    }
+    function onError(error: any) {}
 
     function onClose() {
-      console.log("onClose()");
+      setSelectedComponentName("");
     }
 
     function onMessage(message: any) {
-      console.log("onMessage()");
-      console.log({ message });
+      try {
+        const { componentName } = JSON.parse(message.data);
+
+        if (componentName != null) {
+          setSelectedComponentName(componentName);
+        }
+      } catch (err) {
+        console.log({ err });
+      }
     }
 
     ws.addEventListener("open", onOpen);
@@ -80,5 +81,13 @@ function useWebsocket(port: number) {
     };
   }, []);
 
-  return ws;
+  function onClose() {
+    ws.send("onClosePress");
+  }
+
+  return {
+    SelectedComponent,
+    ws,
+    onClose,
+  };
 }

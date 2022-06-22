@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import * as fs from "fs";
 import { parseComponentsFromSource } from "./parse-components-from-source";
 import fetch from "cross-fetch";
 
@@ -17,11 +16,7 @@ const supportedLanguages = [
 export function activate(context: vscode.ExtensionContext) {
   vscode.languages.registerCodeLensProvider(supportedLanguages, {
     provideCodeLenses: async (document, token) => {
-      const fileAsString = fs.readFileSync(document.uri.path, {
-        encoding: "utf-8",
-      });
-
-      const components = parseComponentsFromSource(fileAsString);
+      const components = parseComponentsFromSource(document.getText());
 
       const lenses: any = [];
 
@@ -49,13 +44,12 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand(
     openCommand,
     (filePath: string, componentName: string) => {
-      console.log({ filePath, componentName });
       fetch(
-        `http://localhost:3000?filePath=${filePath}&componentName=${componentName}`
+        `http://localhost:3241?filePath=${filePath}&componentName=${componentName}`
       )
         .then((res: any) => res.json())
         .then((response: any) => {
-          console.log({ response });
+          // TODO - ??
         })
         .catch((error: any) => {
           // TODO - show error message

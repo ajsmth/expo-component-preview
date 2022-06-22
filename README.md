@@ -40,6 +40,9 @@ function App() {
 
 ``` 
 
+## Important! 
+
+It's recommended that you preview components in files that do not contain the `<ExpoPreviewProvider />` as doing so will cause require cycles and unpredictable behaviour with metro.
 # Development guide
 
 ## Running the VSCode extension locally 

@@ -3,7 +3,7 @@ const { getDefaultConfig } = require("expo/metro-config");
 const withExpoComponentPreview = require("expo-component-preview/withExpoComponentPreview");
 const path = require("path");
 
-const exclusionList = require('metro-config/src/defaults/exclusionList');
+const exclusionList = require("metro-config/src/defaults/exclusionList");
 
 // Find the workspace root, this can be replaced with `find-yarn-workspace-root`
 const workspaceRoot = path.resolve(__dirname, "..");
@@ -19,10 +19,10 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
-config.resolver.blacklistRE = exclusionList([/vscode-extension\/.*/])
+config.resolver.blacklistRE = exclusionList([/vscode-extension\/.*/]);
 
 config.resolver.providesModuleNodeModules = [];
 
-withExpoComponentPreview(config)
+withExpoComponentPreview(config);
 
 module.exports = config;

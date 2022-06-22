@@ -4,22 +4,13 @@ exports.ExpoPreviewProvider = void 0;
 var React = require("react");
 var react_native_1 = require("react-native");
 function ExpoPreviewProvider(_a) {
-    var children = _a.children, _b = _a.port, port = _b === void 0 ? 3000 : _b;
-    var SelectedComponent = null;
-    var ws = useWebsocket(port);
-    try {
-        SelectedComponent = require("expo-preview-internal");
-    }
-    catch (error) {
-        console.log({ error: error });
-        SelectedComponent = null;
-    }
-    function onClose() {
-        ws.send("onClosePress");
-    }
+    var children = _a.children;
+    // TODO - make port configurable
+    var _b = useComponentPreview(), onClose = _b.onClose, SelectedComponent = _b.SelectedComponent;
     return (<react_native_1.View style={react_native_1.StyleSheet.absoluteFill}>
       {children}
       {Boolean(SelectedComponent) && (<react_native_1.View style={[react_native_1.StyleSheet.absoluteFill, { backgroundColor: "white" }]}>
+          <SelectedComponent />
           <react_native_1.View style={{
                 position: "absolute",
                 bottom: 64,
@@ -29,31 +20,37 @@ function ExpoPreviewProvider(_a) {
             }}>
             <react_native_1.Button title="Close" onPress={function () { return onClose(); }}/>
           </react_native_1.View>
-
-          <SelectedComponent />
         </react_native_1.View>)}
     </react_native_1.View>);
 }
 exports.ExpoPreviewProvider = ExpoPreviewProvider;
-function useWebsocket(port) {
-    var _a = React.useState(new WebSocket("ws://localhost:" + port)), ws = _a[0], setWs = _a[1];
+function useComponentPreview(port) {
+    var _a, _b;
+    if (port === void 0) { port = 3241; }
+    var _c = React.useState(new WebSocket("ws://localhost:" + port)), ws = _c[0], setWs = _c[1];
+    var _d = React.useState(""), selectedComponentName = _d[0], setSelectedComponentName = _d[1];
+    var SelectedComponent = (_b = (_a = require("expo-component-preview-internal")) === null || _a === void 0 ? void 0 : _a[selectedComponentName]) !== null && _b !== void 0 ? _b : null;
     React.useEffect(function () {
         setWs(new WebSocket("ws://localhost:" + port));
     }, [port]);
     React.useEffect(function () {
         function onOpen() {
-            console.log("onOpen()");
+            setSelectedComponentName("");
         }
-        function onError(error) {
-            console.log("onError()");
-            console.log({ error: error });
-        }
+        function onError(error) { }
         function onClose() {
-            console.log("onClose()");
+            setSelectedComponentName("");
         }
         function onMessage(message) {
-            console.log("onMessage()");
-            console.log({ message: message });
+            try {
+                var componentName = JSON.parse(message.data).componentName;
+                if (componentName != null) {
+                    setSelectedComponentName(componentName);
+                }
+            }
+            catch (err) {
+                console.log({ err: err });
+            }
         }
         ws.addEventListener("open", onOpen);
         ws.addEventListener("error", onError);
@@ -66,5 +63,12 @@ function useWebsocket(port) {
             ws.removeEventListener("message", onMessage);
         };
     }, []);
-    return ws;
+    function onClose() {
+        ws.send("onClosePress");
+    }
+    return {
+        SelectedComponent: SelectedComponent,
+        ws: ws,
+        onClose: onClose
+    };
 }

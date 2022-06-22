@@ -15,3 +15,27 @@ export function MyOtherComponent() {
     </View>
   );
 }
+
+export function MyOtherComponent2() {
+  return (
+    <View style={{ marginTop: 100 }}>
+      <Text>{`<OneMyOtherComponent2/>`}</Text>
+    </View>
+  );
+}
+
+export function MyOtherComponen() {
+  return (
+    <View style={{ marginTop: 100 }}>
+      <Text>{`<OneMyOtherComponent12/>`}</Text>
+    </View>
+  );
+}
+
+export function MyOtherComponent3() {
+  return (
+    <View style={{ marginTop: 100 }}>
+      <Text>{`<OneMyOtherComponent3/>`}</Text>
+    </View>
+  );
+}

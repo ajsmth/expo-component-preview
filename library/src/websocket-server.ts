@@ -3,17 +3,13 @@ import * as path from "path";
 import * as fs from "fs";
 import { Server as WebSocketServer } from "ws";
 
-// if changing this, you'll also need to update the `withExpoComponentPreview` value
-const previewComponentFileName = "expo-preview-component.js";
-
 export function start({ port, root }: any) {
   const server = createServer((req, res) => {
     if (req.method === "GET") {
       const url = new URL(req.url || "", `http://${req.headers.host}`);
 
       const filePath = url.searchParams.get("filePath");
-
-      let componentName = url.searchParams.get("componentName");
+      const componentName = url.searchParams.get("componentName");
 
       if (filePath != null && componentName != null) {
         updatePreviewComponent(filePath, componentName);
@@ -28,11 +24,11 @@ export function start({ port, root }: any) {
   const pathToPreviewComponentFile = path.resolve(
     root,
     ".expo",
-    previewComponentFileName
+    "expo-component-preview.js"
   );
 
   const template = `
-module.exports = require('{{ filePath }}').{{ componentName }}
+module.exports = require('{{ filePath }}')
   `;
 
   const emptyTemplate = `
@@ -42,13 +38,15 @@ module.exports = null
   function updatePreviewComponent(filePath: string, componentName = "default") {
     resetPreviewComponent();
 
-    fs.writeFileSync(
-      pathToPreviewComponentFile,
-      template
-        .replace(`{{ filePath }}`, filePath)
-        .replace(`{{ componentName }}`, componentName),
-      { encoding: "utf-8" }
-    );
+    const fileContents = template.replace(`{{ filePath }}`, filePath);
+
+    fs.writeFileSync(pathToPreviewComponentFile, fileContents, {
+      encoding: "utf-8",
+    });
+
+    wss.clients.forEach((client) => {
+      client.send(JSON.stringify({ componentName }));
+    });
   }
 
   function resetPreviewComponent() {
@@ -57,13 +55,12 @@ module.exports = null
     });
   }
 
-  resetPreviewComponent();
-
   server.on("close", () => {
     resetPreviewComponent();
   });
 
   server.listen(port, () => {
+    resetPreviewComponent();
     console.log(`Expo Component Preview running on http://localhost:${port}`);
   });
 
