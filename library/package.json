@@ -1,10 +1,12 @@
 {
   "name": "expo-component-preview",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "./build/index.js",
   "bin": "./cli.js",
   "files": [
-    "./withExpoComponentPreview.js"
+    "build/*",
+    "cli.js",
+    "withExpoComponentPreview.js"
   ],
   "types": "./build/index.d.ts",
   "author": "andy",
