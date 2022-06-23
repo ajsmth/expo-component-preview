@@ -3,6 +3,7 @@
   "displayName": "Expo Component Preview",
   "description": "Instantly preview React Native components",
   "version": "0.0.1",
+  "publisher": "andydevs123",
   "engines": {
     "vscode": "^1.67.0"
   },
