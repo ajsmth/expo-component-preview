@@ -1,45 +1,70 @@
-import { Parser } from "acorn";
+import { parse } from "@babel/parser";
+import { importsProvider } from "./imports-provider";
+
+type ComponentNode = {
+  start: number;
+  end: number;
+  name: string;
+  isExported?: boolean;
+};
 
 export function parseComponentsFromSource(sourceCode: string) {
-  let body = [];
+  const ast = parse(sourceCode, {
+    sourceType: "module",
+    plugins: ["typescript", "jsx"],
+  });
 
-  try {
-    const ast: any = Parser.extend(require("acorn-jsx")()).parse(sourceCode, {
-      ecmaVersion: "latest",
-      sourceType: "module",
-    });
+  let body = ast.program.body;
 
-    body = ast.body;
-  } catch (error) {
-    console.log({ error });
+  let components = new Map<string, any>();
+
+  function addIfReactComponent(component: any) {
+    if (isCapitalized(component.name)) {
+      components.set(component.name, component);
+    }
   }
 
-  let components = new Map();
-
   for (const node of body) {
+    if (node.type === "ImportDeclaration") {
+      if (importsProvider(node)) {
+        components.clear();
+        break;
+      }
+    }
+
     // const MyComponent = () => {}
     if (node.type === "VariableDeclaration") {
-      parseVariableDeclarations(node, { isExported: false });
+      for (let declaration of node.declarations) {
+        const component: any = declaration.id;
+        component.isExported = false;
+        addIfReactComponent(component);
+      }
     }
 
     // function MyComponent() {}
     if (node.type === "FunctionDeclaration") {
-      parseFunctionDeclaration(node, { isExported: false });
+      const component: any = node.id;
+      component.isExported = false;
+      addIfReactComponent(component);
     }
 
-    // export const MyComponent = () => {}
+    // // export const MyComponent = () => {}
     if (node.type === "ExportNamedDeclaration") {
       if (node.declaration) {
         const declarationType = node.declaration.type;
 
         if (declarationType === "VariableDeclaration") {
-          parseVariableDeclarations(node.declaration, { isExported: true });
+          for (let declaration of node.declaration.declarations) {
+            const component: any = declaration.id;
+            component.isExported = true;
+            addIfReactComponent(component);
+          }
         }
 
         if (declarationType === "FunctionDeclaration") {
-          parseFunctionDeclaration(node.declaration, {
-            isExported: true,
-          });
+          const component: any = node.declaration.id;
+          component.isExported = true;
+          addIfReactComponent(component);
         }
       }
 
@@ -48,61 +73,39 @@ export function parseComponentsFromSource(sourceCode: string) {
         for (const specifier of node.specifiers) {
           if (specifier.type === "ExportSpecifier") {
             const component = components.get(specifier.local.name);
-            components.set(component.name, { ...component, isExported: true });
+            component.isExported = true;
+            addIfReactComponent(component);
           }
         }
       }
     }
 
     if (node.type === "ExportDefaultDeclaration") {
+      // export default function [name?](){}
+      if (node.declaration.type === "FunctionDeclaration") {
+        if (!node.declaration.id) {
+          const component: any = node.declaration;
+          component.name = "default";
+          component.isExported = true;
+          components.set("default", component);
+        } else {
+          const component: any = node.declaration.id;
+          component.isExported = true;
+          if (isCapitalized(component.name)) {
+            components.set("default", component);
+          }
+        }
+      }
+
       // export default MyComponent
       if (node.declaration.type === "Identifier") {
-        const previousEntry = components.get(node.declaration.name);
-        if (previousEntry != null) {
-          components.set("default", {
-            ...node.declaration.id,
-            ...previousEntry,
-            isExported: true,
-          });
-          components.delete(node.declaration.name);
-        }
-      } else {
-        // export default function MyComponent() {}
-        components.set("default", {
-          ...node.declaration.id,
-          isExported: true,
-        });
-      }
-    }
-  }
-
-  function parseVariableDeclarations(
-    node: any,
-    { isExported = false }: { isExported: boolean }
-  ) {
-    const declarations = node.declarations ?? [];
-    for (const declaration of declarations) {
-      if (declaration.init?.type === "ArrowFunctionExpression") {
-        const name: string = declaration.id?.name ?? "";
-
-        if (isCapitalized(name)) {
-          components.set(declaration.id?.name, {
-            isExported,
-            ...declaration.id,
-          });
+        const component = components.get(node.declaration.name);
+        if (component != null) {
+          component.isExported = true;
+          components.set("default", component);
+          components.delete(component.name);
         }
       }
-    }
-  }
-
-  function parseFunctionDeclaration(
-    node: any,
-    { isExported = false }: { isExported: boolean }
-  ) {
-    const name = node.id.name;
-
-    if (isCapitalized(name)) {
-      components.set(node.id.name, { isExported, ...node.id });
     }
   }
 

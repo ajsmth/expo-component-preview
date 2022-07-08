@@ -24,18 +24,10 @@ export function MyOtherComponent2() {
   );
 }
 
-export function MyOtherComponen() {
+export function MyOtherComponent3({ awesome }: { awesome: number }) {
   return (
-    <View style={{ marginTop: 100 }}>
-      <Text>{`<OneMyOtherComponent12/>`}</Text>
-    </View>
-  );
-}
-
-export function MyOtherComponent3() {
-  return (
-    <View style={{ marginTop: 100 }}>
-      <Text>{`<OneMyOtherComponent3/>`}</Text>
+    <View>
+      <Text>{`<OneMyOtherComponent123123/>`}</Text>
     </View>
   );
 }

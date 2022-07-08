@@ -1,15 +1,17 @@
 import { parseComponentsFromSource } from "../parse-components-from-source";
 
 describe("parsing components", () => {
-  test("jsx", () => {
-    const output = parseComponentsFromSource(`
-      import * as React from 'react';
+  test("smoke test", () => {
+    expect(() =>
+      parseComponentsFromSource(`
+      import * as React from 'react'
       import { View } from 'react-native';
 
-      function App() {
+      function App({ title }: { title: string }) {
         return <View>123</View>
       }
-    `);      
+    `)
+    ).not.toThrow();
   });
 
   test("parse arrow fn", () => {
@@ -17,9 +19,10 @@ describe("parsing components", () => {
       `const MyArrowComponent = () => {}`
     );
     const component = output.get("MyArrowComponent");
+    expect(component).toBeDefined();
     expectNodeAttributes(component);
-    expect(component.name).toEqual("MyArrowComponent");
-    expect(component.isExported).toBe(false);
+    expect(component?.name).toEqual("MyArrowComponent");
+    expect(component?.isExported).toBe(false);
   });
 
   test("parse function component", () => {
@@ -28,8 +31,8 @@ describe("parsing components", () => {
     );
     const component = output.get("MyFunctionComponent");
     expectNodeAttributes(component);
-    expect(component.name).toEqual("MyFunctionComponent");
-    expect(component.isExported).toBe(false);
+    expect(component?.name).toEqual("MyFunctionComponent");
+    expect(component?.isExported).toBe(false);
   });
 
   test("lowercase function is not a component", () => {
@@ -96,8 +99,7 @@ describe("parsing components", () => {
 
   test("default export function", () => {
     const output = parseComponentsFromSource(
-      `export default function MyFunctionComponent() {};
-      `
+      `export default function MyFunctionComponent() {};`
     );
 
     const component = output.get("default");
@@ -133,12 +135,24 @@ describe("parsing components", () => {
     const output = parseComponentsFromSource(template);
 
     expect(output.size).toEqual(4);
-
     expect(output.get("test")).not.toBeDefined();
     expect(output.get("MyComponent").isExported).toBe(true);
     expect(output.get("default").name).toEqual("MyComponent4");
   });
 
+  test("default export no name", () => {
+    const output = parseComponentsFromSource(
+      `export default function() {}
+      `
+    );
+
+    const component = output.get("default");
+    expectNodeAttributes(component);
+    expect(component.name).toEqual("default");
+    expect(component.isExported).toBe(true);
+    expect(output.size).toEqual(1);
+  });
+  
   function expectNodeAttributes(node: any) {
     expect(node.isExported).toBeDefined();
     expect(node.start).toBeDefined();

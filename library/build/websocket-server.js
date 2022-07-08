@@ -16,7 +16,6 @@ function start(_a) {
                 updatePreviewComponent(filePath, componentName);
             }
             else {
-                // TODO - warning? message?
             }
         }
         res.end();

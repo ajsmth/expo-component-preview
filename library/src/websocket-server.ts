@@ -14,7 +14,6 @@ export function start({ port, root }: any) {
       if (filePath != null && componentName != null) {
         updatePreviewComponent(filePath, componentName);
       } else {
-        // TODO - warning? message?
       }
     }
 
